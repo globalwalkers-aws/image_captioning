@@ -1,20 +1,26 @@
-import argparse, yaml, os, utils, torch, glob
+import argparse, yaml, os, utils, torch, glob, cv2, numpy, time
 from pathlib import Path
 from models.tokenization_bert import BertTokenizer
 from models.model_caption_mplug import MPLUG
 import torch.nn as nn
 import torch.backends.cudnn as cudnn
-from optim import create_optimizer, create_two_optimizer
+from optim import create_optimizer
 from models.vit import resize_pos_embed
 from PIL import Image
 from torchvision import transforms
+
+BLACK_BACKGROUND_HEIGHT = 50
+OUTPUT_WIDTH            = 720
+OUTPUT_HEIGHT           = 480
+
 class ImageCaptionModel:
 
     def __init__( self, args, config):
+        print(f"Loading mPLUG model . . .")
         utils.init_distributed_mode( args )
         self.device     = torch.device( args.device )
         cudnn.benchmark = True
-        self.tokenizer  = BertTokenizer.from_pretrained(args.text_encoder)
+        self.tokenizer  = BertTokenizer.from_pretrained( config['text_encoder'])
         self.model      = MPLUG( config = config, tokenizer=self.tokenizer )
         self.model      = self.model.to(self.device)
         self.optimiser  = create_optimizer( utils.AttrDict(config['optimizer']), self.model )
@@ -27,7 +33,7 @@ class ImageCaptionModel:
             
         num_patches = int(config["image_res"] * config["image_res"]/(16*16))
         pos_embed   = nn.Parameter(torch.zeros(num_patches + 1, 768).float())
-        pos_embed = resize_pos_embed(self.state_dict['visual_encoder.visual.positional_embedding'].unsqueeze(0),
+        pos_embed   = resize_pos_embed(self.state_dict['visual_encoder.visual.positional_embedding'].unsqueeze(0),
                                                    pos_embed.unsqueeze(0))
         self.state_dict['visual_encoder.visual.positional_embedding'] = pos_embed
         self.model.load_state_dict( self.state_dict, strict=False )
@@ -36,79 +42,74 @@ class ImageCaptionModel:
 
         print(f"Model loaded: {args.checkpoint}")
 
-    def inference( self, image_data ):
-        top_ids, top_probs = self.model( image_data, "", train=False )
-        
+    def generateDisplayImage( self, generated_caption, cv2_image ):
+        display_text     = f"Caption: {generated_caption}"
+        black_background = numpy.zeros([ BLACK_BACKGROUND_HEIGHT, cv2_image.shape[1], 3], dtype=numpy.uint8)
+        cv2.putText( black_background, display_text, (int(BLACK_BACKGROUND_HEIGHT/2), int(BLACK_BACKGROUND_HEIGHT/2)), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 250, 0), 1, cv2.LINE_AA )
+        stack_image = cv2.vconcat( [black_background, cv2_image] )
+        return stack_image
+
+
+    def inference( self, transfomred_image, cv2_image ):
+        start_time = time.time()
+        top_ids, _ = self.model( transfomred_image, "", train=False )
+        cv2_image  = cv2.resize( cv2_image, ( OUTPUT_WIDTH, OUTPUT_HEIGHT ))
         for id in top_ids:
-            ans = self.tokenizer.decode(id[0]).replace("[SEP]", "").replace("[CLS]", "").replace("[PAD]", "").strip()
-            print( f"Caption: {ans}" )
+            ans              = self.tokenizer.decode(id[0]).replace("[SEP]", "").replace("[CLS]", "").replace("[PAD]", "").strip()
+            end_time         = time.time()
+            fps              = 1 / ( end_time - start_time )
+            display_image    = self.generateDisplayImage( ans, cv2_image )
+            cv2.imshow('output', display_image)
+            cv2.waitKey(0)
+
+    @staticmethod
+    def load_image(image, image_size):
+        device    = "cuda:0"
+        raw_image = Image.open(str(image)).convert('RGB')
+        cv2_image = numpy.array( raw_image )
+        cv2_image = cv2_image[:,:,::-1].copy()
+
+        w, h = raw_image.size
+
+        transform = transforms.Compose([
+            transforms.Resize((image_size, image_size) ),
+            transforms.ToTensor(),
+            transforms.Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711))
+        ])
+        image = transform(raw_image).unsqueeze(0).to(device)
+        return image, cv2_image
+        
+
 def getConfigurations():
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', default='./configs/caption_mplug_base.yaml')
     parser.add_argument('--checkpoint', default='./mplug_base.pth')
-    parser.add_argument('--output_dir', default='output/mplug_base')
-    parser.add_argument('--evaluate', action='store_true')
-    parser.add_argument('--text_encoder', default='bert-base-uncased')
-    parser.add_argument('--text_decoder', default='bert-base-uncased')
     parser.add_argument('--device', default='cuda')
-    parser.add_argument('--seed', default=42, type=int)
     parser.add_argument('--min_length', default=10, type=int)
-    parser.add_argument('--lr', default=2e-5, type=float)
     parser.add_argument('--max_length', default=25, type=int)
     parser.add_argument('--max_input_length', default=25, type=int)
-    parser.add_argument('--beam_size', default=5, type=int)
-    parser.add_argument('--world_size', default=1, type=int, help='number of distributed processes')
-    parser.add_argument('--dist_url', default='env://', help='url used to set up distributed training')
-    parser.add_argument('--distributed', default=True, type=bool)
-    parser.add_argument('--do_two_optim', action='store_true')
-    parser.add_argument('--add_object', action='store_true')
-    parser.add_argument('--do_amp', action='store_true')
-    parser.add_argument('--no_init_decocde', action='store_true')
-    parser.add_argument('--do_accum', action='store_true')
-    parser.add_argument('--accum_steps', default=4, type=int)
-    args = parser.parse_args()
 
+    args = parser.parse_args()
     config = yaml.load(open(args.config, 'r'), Loader=yaml.Loader)
 
-    args.result_dir = os.path.join(args.output_dir, 'result')
-
-    Path(args.output_dir).mkdir(parents=True, exist_ok=True)
-    Path(args.result_dir).mkdir(parents=True, exist_ok=True)
+    # assign the config variables needed for model initialisation
     config["min_length"] = args.min_length
     config["max_length"] = args.max_length
-    config["add_object"] = args.add_object
-    config["beam_size"] = args.beam_size
-    config['optimizer']['lr'] = args.lr
-    config['schedular']['lr'] = args.lr
-    config['text_encoder'] = args.text_encoder
-    config['text_decoder'] = args.text_decoder
-    yaml.dump(config, open(os.path.join(args.output_dir, 'config.yaml'), 'w'))
+    config['text_encoder'] = "bert-base-uncased"
+    config['text_decoder'] = "bert-base-uncased"
+    config['beam_size']    = 5
+    config['optimizer']['lr'] = 2e-5
 
     return args, config
-
-def load_image(image, image_size):
-    device    = "cuda:0"
-    raw_image = Image.open(str(image)).convert('RGB')
-
-    w, h = raw_image.size
-
-    transform = transforms.Compose([
-        transforms.Resize((image_size, image_size) ),
-        transforms.ToTensor(),
-        transforms.Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711))
-    ])
-    image = transform(raw_image).unsqueeze(0).to(device)
-    return image
 
 def main():
 
     args, config        = getConfigurations()
     image_caption_model = ImageCaptionModel( args, config )
-
     image_folder        = "./sample_images/"
     for image in glob.glob( image_folder + '/*' ):
-        image_data = load_image( image, image_size=384 )
-        image_caption_model.inference( image_data )
+        transformed_image, cv2_image = image_caption_model.load_image( image, image_size=config['image_res'] )
+        image_caption_model.inference( transformed_image, cv2_image )
 
 if __name__ == "__main__":
     main()
