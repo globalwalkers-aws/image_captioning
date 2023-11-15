@@ -8,8 +8,6 @@ from optim import create_optimizer, create_two_optimizer
 from models.vit import resize_pos_embed
 from PIL import Image
 from torchvision import transforms
-from torchvision.transforms.functional import InterpolationMode
-
 class ImageCaptionModel:
 
     def __init__( self, args, config):
@@ -36,16 +34,14 @@ class ImageCaptionModel:
         self.model.eval()
         self.model.to( self.device )
 
-        print("Model loaded")
+        print(f"Model loaded: {args.checkpoint}")
 
     def inference( self, image_data ):
-        top_ids, top_probs = self.model( image_data, "caption this photo", train=False )
+        top_ids, top_probs = self.model( image_data, "", train=False )
         
-        print( top_ids )
         for id in top_ids:
-            print(id[0])
             ans = self.tokenizer.decode(id[0]).replace("[SEP]", "").replace("[CLS]", "").replace("[PAD]", "").strip()
-            print( ans )
+            print( f"Caption: {ans}" )
 def getConfigurations():
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', default='./configs/caption_mplug_base.yaml')
@@ -56,9 +52,9 @@ def getConfigurations():
     parser.add_argument('--text_decoder', default='bert-base-uncased')
     parser.add_argument('--device', default='cuda')
     parser.add_argument('--seed', default=42, type=int)
-    parser.add_argument('--min_length', default=1, type=int)
+    parser.add_argument('--min_length', default=10, type=int)
     parser.add_argument('--lr', default=2e-5, type=float)
-    parser.add_argument('--max_length', default=10, type=int)
+    parser.add_argument('--max_length', default=25, type=int)
     parser.add_argument('--max_input_length', default=25, type=int)
     parser.add_argument('--beam_size', default=5, type=int)
     parser.add_argument('--world_size', default=1, type=int, help='number of distributed processes')
@@ -97,7 +93,7 @@ def load_image(image, image_size):
     w, h = raw_image.size
 
     transform = transforms.Compose([
-        transforms.Resize((image_size, image_size), interpolation=InterpolationMode.BICUBIC),
+        transforms.Resize((image_size, image_size) ),
         transforms.ToTensor(),
         transforms.Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711))
     ])

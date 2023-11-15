@@ -11,8 +11,8 @@ distill: true
 eos: '[SEP]'
 image_res: 384
 k_test: 128
-max_length: 10
-min_length: 1
+max_length: 25
+min_length: 10
 optimizer:
   lr: 2.0e-05
   lr1: 1e-5

@@ -70,7 +70,6 @@ class MPLUG(nn.Module):
             self.dropout = nn.Dropout(self.config_encoder.hidden_dropout_prob)
             self.large = True
         self.use_checkpoint = config["use_checkpoint"] if "use_checkpoint" in config else True
-        print ("use_checkpoint: ", self.use_checkpoint)
 
     def beam_search(self, image, question, answer=None, train=True, out_size=5):
         image_embeds = self.visual_encoder.visual(image, skip_last_layer=True)

@@ -18,7 +18,7 @@ def create_dataset(dataset, config, epoch=None):
     normalize = transforms.Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711))
     
     pretrain_transform = transforms.Compose([                        
-            transforms.RandomResizedCrop(config['image_res'],scale=(0.2, 1.0), interpolation=Image.BICUBIC),
+            transforms.RandomResizedCrop(config['image_res'],scale=(0.2, 1.0)),
             transforms.RandomHorizontalFlip(),
             RandomAugment(2,7,isPIL=True,augs=['Identity','AutoContrast','Equalize','Brightness','Sharpness',
                                               'ShearX', 'ShearY', 'TranslateX', 'TranslateY', 'Rotate']),     
@@ -26,7 +26,7 @@ def create_dataset(dataset, config, epoch=None):
             normalize,
         ])    
     train_transform = transforms.Compose([                        
-            transforms.RandomResizedCrop(config['image_res'],scale=(0.5, 1.0), interpolation=Image.BICUBIC),
+            transforms.RandomResizedCrop(config['image_res'],scale=(0.5, 1.0)),
             transforms.RandomHorizontalFlip(),
             RandomAugment(2,7,isPIL=True,augs=['Identity','AutoContrast','Equalize','Brightness','Sharpness',
                                               'ShearX', 'ShearY', 'TranslateX', 'TranslateY', 'Rotate']),     
@@ -34,7 +34,7 @@ def create_dataset(dataset, config, epoch=None):
             normalize,
         ])  
     test_transform = transforms.Compose([
-        transforms.Resize((config['image_res'],config['image_res']),interpolation=Image.BICUBIC),
+        transforms.Resize((config['image_res'],config['image_res'])),
         transforms.ToTensor(),
         normalize,
         ])   

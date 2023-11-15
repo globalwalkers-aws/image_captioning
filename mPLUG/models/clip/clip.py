@@ -83,7 +83,7 @@ def load(name: str, device: Union[str, torch.device] = "cuda" if torch.cuda.is_a
     n_px = model.visual.input_resolution
 
     transform = Compose([
-        Resize(n_px, interpolation=Image.BICUBIC),
+        Resize(n_px),
         CenterCrop(n_px),
         lambda image: image.convert("RGB"),
         ToTensor(),
