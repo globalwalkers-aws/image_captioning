@@ -15,7 +15,6 @@ ARG PYTHON_VERSION
 RUN apt-get install ${PYTHON_VERSION} -y
 RUN apt -y install python3-pip
 
-
 # install libraries for opencv
 RUN apt-get update && apt-get install ffmpeg libsm6 libxext6  -y
 
@@ -28,6 +27,7 @@ ARG TORCHVISION_VERSION
 RUN pip install torch==${TORCH_VERSION} -f https://download.pytorch.org/whl/torch_stable.html
 RUN pip install torchvision==${TORCHVISION_VERSION} 
 # install system libraries from requirements.txt
+
 COPY requirements.txt /app/requirements.txt
 RUN --mount=type=cache,target=/root/.cache \ 
     python3 -m pip install -r requirements.txt
