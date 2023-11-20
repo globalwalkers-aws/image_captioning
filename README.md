@@ -31,6 +31,12 @@ python3 inference.py
 cd BLIP
 ```
 
+- Download pretained model and place it inside the BLIP folder
+
+```
+https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_caption_capfilt_large.pth
+```
+
 - Create BLIP docker environment
 
 ```
