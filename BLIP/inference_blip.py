@@ -8,13 +8,16 @@ wget https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/mod
 from pathlib import Path
 
 from PIL import Image
-import torch, glob
+import torch, glob, numpy, cv2, time
 from torchvision import transforms
 from torchvision.transforms.functional import InterpolationMode
 from models.blip import blip_decoder
 from models.blip_vqa import blip_vqa
 from models.blip_itm import blip_itm
 
+BLACK_BACKGROUND_HEIGHT = 50
+OUTPUT_WIDTH            = 720
+OUTPUT_HEIGHT           = 480
 
 class Predictor:
     def __init__(self):
@@ -31,20 +34,19 @@ class Predictor:
         if task == 'image_text_matching':
             assert caption is not None, 'Please type a caption for mage text matching task.'
 
-        im = load_image(image, image_size=480 if task == 'visual_question_answering' else 384, device=self.device)
+        im, cv_img = load_image(image, image_size=480 if task == 'visual_question_answering' else 384, device=self.device)
         model = self.models[task]
         model.eval()
         model = model.to(self.device)
+        start_time = time.time()
 
         if task == 'image_captioning':
             with torch.no_grad():
                 caption = model.generate(im, sample=False, num_beams=3, max_length=20, min_length=5)
-                return 'Caption: ' + caption[0]
-
-        if task == 'visual_question_answering':
-            with torch.no_grad():
-                answer = model(im, question, train=False, inference='generate')
-                return 'Answer: ' + answer[0]
+                end_time = time.time()
+                fps      = 1 / ( end_time - start_time )
+                print( f"FPS : {fps}")
+                return caption[0], cv_img
 
         # image_text_matching
         itm_output = model(im, caption, match_head='itm')
@@ -56,6 +58,9 @@ class Predictor:
 
 def load_image(image, image_size, device):
     raw_image = Image.open(str(image)).convert('RGB')
+    cv2_image = numpy.array( raw_image )
+    cv2_image = cv2_image[:,:,::-1].copy()
+    cv2_image  = cv2.resize( cv2_image, ( OUTPUT_WIDTH, OUTPUT_HEIGHT ))
 
     w, h = raw_image.size
 
@@ -65,15 +70,22 @@ def load_image(image, image_size, device):
         transforms.Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711))
     ])
     image = transform(raw_image).unsqueeze(0).to(device)
-    return image
+    return image, cv2_image
+
+def generateDisplayImage( generated_caption, cv2_image ):
+    display_text     = f"Caption: {generated_caption}"
+    black_background = numpy.zeros([ BLACK_BACKGROUND_HEIGHT, cv2_image.shape[1], 3], dtype=numpy.uint8)
+    cv2.putText( black_background, display_text, (int(BLACK_BACKGROUND_HEIGHT/2), int(BLACK_BACKGROUND_HEIGHT/2)), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 250, 0), 1, cv2.LINE_AA )
+    stack_image = cv2.vconcat( [black_background, cv2_image] )
+    return stack_image
 
 def main():
 
     sample_dir = './sample_images/'
     blip_model = Predictor()
     for image in glob.glob( sample_dir + '/*' ):
-        ans = blip_model.predict( image, "image_captioning", "what is in the image?", None )
-        print( ans )
+        caption, cv_img = blip_model.predict( image, "image_captioning", "what is in the image?", None )
+        output_image    = generateDisplayImage( caption, cv_img )
         
 if __name__ == "__main__":
     main()

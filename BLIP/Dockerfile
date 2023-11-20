@@ -1,7 +1,7 @@
 # This is the DockerFile used for ITSP REID Phase-3 system #
 # This environment make use of Ubuntu20.04 with Cuda 11.1  #
 
-FROM nvidia/cuda:11.3.1-base-ubuntu20.04
+FROM nvidia/cuda:11.3.1-runtime-ubuntu20.04
 ARG DEBIAN_FRONTEND=noninteractive
 WORKDIR /app
 
