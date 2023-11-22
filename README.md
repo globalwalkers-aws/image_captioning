@@ -45,51 +45,23 @@ python3 inference_blip.py
 
 ## OFA
 
-### Preparation
-- Please go to OFA folder
-  ```
-  cd OFA
-  ```
-- Please Add Submodule by running the following command
-  ```
-  git submodule init
-  ```
-- Pull latest commits from sub modules' branch
-  ```
-  git submodule update --init --remote --merge --recursive
-  ```
-  - Please Download Weight file
-  ```
-  wget https://ofa-beijing.oss-cn-beijing.aliyuncs.com/checkpoints/caption_base_best.pt
-  mkdir weight_checkpoints
-  cp caption_base_best.pt weight_checkpoints
-  ```
-
-### Environment
-- Please use one of the following approach to make environments.
-  #### With Conda
-    ```
-    conda create -n ImageCaptioningEnv python=3.7.4
-    conda activate ImageCaptioningEnv
-  
-    pip install -r requirements.txt
-    ```
-  
-  #### With Docker
+### Build Docker Environment
+- Please run the following command to build Docker environment.
     ```
     make docker-build
-    
-    make docker-run
     ```
 ### Run Inference
-- Please run the following commands for captioning inferencing
-#### Inference images on images under sample_images directory
-   ```
-   python inference.py --sample_image_path {path/to/sample.jpg} --save_dir {results/dir/}
-   ```
 
-#### Measure FPS
+- Please run the following command to download weigh file, and run docker environment to start inferencing on sample images.
   ```
-  python measure_fps.py --sample_image_path {dir/to/sample_images}
+  ./run_system.sh
   ```
-
+  #### Inference images on images under sample_images directory
+     ```
+     python3 inference.py --sample_image_path {path/to/sample.jpg} --save_dir {results/dir/}
+     ```
+     
+  #### Measure FPS
+    ```
+    python3 measure_fps.py --sample_image_path {dir/to/sample_images}
+    ```
