@@ -22,13 +22,16 @@
     ```
 ### Run Inference
 
-- Please run the following commands for captioning inferencing
+- Please run the following command to download weigh file, and run docker environment to start inferencing on sample images
+  ```
+  ./run_system.sh
+  ```
   #### Inference images on images under sample_images directory
      ```
-     python inference.py --sample_image_path {path/to/sample.jpg} --save_dir {results/dir/}
+     python3 inference.py --sample_image_path {path/to/sample.jpg} --save_dir {results/dir/}
      ```
      
   #### Measure FPS
     ```
-    python measure_fps.py --sample_image_path {dir/to/sample_images}
+    python3 measure_fps.py --sample_image_path {dir/to/sample_images}
     ```
