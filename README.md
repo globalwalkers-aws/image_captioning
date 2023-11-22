@@ -82,7 +82,7 @@ python3 inference_blip.py
     make docker-run
     ```
 ### Run Inference
--Please run the following commands for captioning inferencing
+- Please run the following commands for captioning inferencing
 #### Inference images on images under sample_images directory
    ```
    python inference.py --sample_image_path {path/to/sample.jpg} --save_dir {results/dir/}
