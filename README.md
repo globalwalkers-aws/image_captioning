@@ -66,30 +66,30 @@ python3 inference_blip.py
   ```
 
 ### Environment
-Please use one of the following approach to make environments.
-#### With Conda
-  ```
-  conda create -n ImageCaptioningEnv python=3.7.4
-  conda activate ImageCaptioningEnv
-
-  pip install -r requirements.txt
-  ```
-
-#### With Docker
-  ```
-  make docker-build
+- Please use one of the following approach to make environments.
+  #### With Conda
+    ```
+    conda create -n ImageCaptioningEnv python=3.7.4
+    conda activate ImageCaptioningEnv
   
-  make docker-run
-  ```
+    pip install -r requirements.txt
+    ```
+  
+  #### With Docker
+    ```
+    make docker-build
+    
+    make docker-run
+    ```
 ### Run Inference
-Please run the following commands for captioning inferencing
-#### Run inference
- ```
- python inference.py --sample_image_path {path/to/sample.jpg} --save_dir {results/dir/}
- ```
+-Please run the following commands for captioning inferencing
+#### Inference images on images under sample_images directory
+   ```
+   python inference.py --sample_image_path {path/to/sample.jpg} --save_dir {results/dir/}
+   ```
 
 #### Measure FPS
-```
-python measure_fps.py --sample_image_path {dir/to/sample_images}
-```
+  ```
+  python measure_fps.py --sample_image_path {dir/to/sample_images}
+  ```
 
