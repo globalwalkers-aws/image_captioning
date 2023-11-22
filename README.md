@@ -60,18 +60,35 @@ python3 inference_blip.py
   ```
 
 ### Preparation
-#### With Conda
 ```
-conda create -n ImageCaptioningEnv python=3.7.4
-conda activate ImageCaptioningEnv
+wget https://ofa-beijing.oss-cn-beijing.aliyuncs.com/checkpoints/caption_base_best.pt
+mkdir weight_checkpoints
+cp caption_base_best.pt weight_checkpoints
+```
 
-pip install -r requirements.txt
-```
+### Environment
+#### With Conda
+  ```
+  conda create -n ImageCaptioningEnv python=3.7.4
+  conda activate ImageCaptioningEnv
+
+  pip install -r requirements.txt
+  ```
 
 #### With Docker
-```
-
-```
+  ```
+  make docker-build
+  
+  make docker-run
+  ```
 
 #### Run inference
+ ```
+ python inference.py --sample_image_path {path/to/sample.jpg} --save_dir {results/dir/}
+ ```
+
+#### Measure FPS
+```
+python measure_fps.py --sample_image_path {dir/to/sample_images}
+```
 
