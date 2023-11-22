@@ -145,6 +145,7 @@ class ImgCaptionInferencer:
 
         # new_image.show()
         new_image.save(save_dir)
+        print(f"Successfully inferenced results saved in {save_dir}!!!")
 
 def getConfigurations():
         parser = argparse.ArgumentParser()
@@ -158,46 +159,30 @@ def getConfigurations():
 
         return args, config
     
-
 def main():
 
     args, config = getConfigurations()
     caption_inferencer = ImgCaptionInferencer(config)
 
-    # image = caption_inferencer.load_image(args.sample_image_path)
-
-    # start_time = time.time()
-
-    # caption = caption_inferencer.inference_image(image)
-
-    # end_time = time.time()
-
-    # fps = 1/(end_time-start_time)
-
-    # print("[FPS]: {}".format(fps))
-
-    # filen = os.path.basename(args.sample_image_path)
-    # if not os.path.exists(args.save_dir):
-    #     os.makedirs(args.save_dir, exist_ok=True)
-    # output_dir = os.path.join(args.save_dir, filen)
-
-    # caption_inferencer.save_captioned_image(image, caption, output_dir)
-    
+    image = caption_inferencer.load_image(args.sample_image_path)
 
     start_time = time.time()
-    for image_pth in glob.glob(args.sample_image_path + '/*'):
 
-        image = caption_inferencer.load_image(image_pth)
-        caption = caption_inferencer.inference_image(image)
-        print("Caption: ", caption)
-        end_time = time.time()
+    caption = caption_inferencer.inference_image(image)
 
-        if end_time > start_time:
-            fps = 1/(end_time - start_time)
-            print("[FPS]: {}".format(fps))
-        
-        start_time = end_time
+    end_time = time.time()
 
+    fps = 1/(end_time-start_time)
+
+    print("[FPS]: {}".format(fps))
+
+    filen = os.path.basename(args.sample_image_path)
+    if not os.path.exists(args.save_dir):
+        os.makedirs(args.save_dir, exist_ok=True)
+    output_dir = os.path.join(args.save_dir, filen)
+
+    caption_inferencer.save_captioned_image(image, caption, output_dir)
+    
        
 if __name__ == "__main__":
     main()

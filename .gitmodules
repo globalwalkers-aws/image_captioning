@@ -1,3 +1,0 @@
-[submodule "OFA/fairseq"]
-	path = OFA/fairseq
-	url = https://github.com/facebookresearch/fairseq
