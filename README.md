@@ -45,7 +45,7 @@ python3 inference_blip.py
 
 ## OFA
 
-
+### Preparation
 - Please go to OFA folder
   ```
   cd OFA
@@ -58,20 +58,37 @@ python3 inference_blip.py
   ```
   git submodule update --init --remote --merge --recursive
   ```
+  - Please Download Weight file
+  ```
+  wget https://ofa-beijing.oss-cn-beijing.aliyuncs.com/checkpoints/caption_base_best.pt
+  mkdir weight_checkpoints
+  cp caption_base_best.pt weight_checkpoints
+  ```
 
-### Preparation
-#### With Conda
-```
-conda create -n ImageCaptioningEnv python=3.7.4
-conda activate ImageCaptioningEnv
+### Environment
+- Please use one of the following approach to make environments.
+  #### With Conda
+    ```
+    conda create -n ImageCaptioningEnv python=3.7.4
+    conda activate ImageCaptioningEnv
+  
+    pip install -r requirements.txt
+    ```
+  
+  #### With Docker
+    ```
+    make docker-build
+    
+    make docker-run
+    ```
+### Run Inference
+- Please run the following commands for captioning inferencing
+#### Inference images on images under sample_images directory
+   ```
+   python inference.py --sample_image_path {path/to/sample.jpg} --save_dir {results/dir/}
+   ```
 
-pip install -r requirements.txt
-```
-
-#### With Docker
-```
-
-```
-
-#### Run inference
-
+#### Measure FPS
+  ```
+  python measure_fps.py --sample_image_path {dir/to/sample_images}
+  ```
