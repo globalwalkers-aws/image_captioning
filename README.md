@@ -45,16 +45,14 @@ python3 inference_blip.py
 
 ## OFA
 
-### Environment
-- Please use one of the following command to make environments.
-
-  #### With Docker
+### Build Docker Environment
+- Please run the following command to build Docker environment.
     ```
     make docker-build
     ```
 ### Run Inference
 
-- Please run the following command to download weigh file, and run docker environment to start inferencing on sample images
+- Please run the following command to download weigh file, and run docker environment to start inferencing on sample images.
   ```
   ./run_system.sh
   ```
