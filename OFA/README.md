@@ -1,7 +1,7 @@
 # OFA
 ## Original Repository & Paper
-* Repository -> 
-* Paper -> 
+* Repository -> [OFA Repository](https://github.com/OFA-Sys/OFA)
+* Paper -> [Paper PDF](https://arxiv.org/pdf/2202.03052.pdf)
 
 ## Overview
 * OFA is a Sequence-to-sequence learning framework that supports flexible modality tasks, and it achieved state-of-the-art performance on a variety of cross-modal and unimodal tasks.
@@ -13,43 +13,15 @@
 * It supports flexible size of model checkpoints which can help to choose between desired speed and accuracy of specific tasks.
 
 
-### Preparation
-- Please go to OFA folder
-  ```
-  cd OFA
-  ```
-- Please Add Submodule by running the following command
-  ```
-  git submodule init
-  ```
-- Pull latest commits from sub modules' branch
-  ```
-  git submodule update --init --remote --merge --recursive
-  ```
-  - Please Download Weight file
-  ```
-  wget https://ofa-beijing.oss-cn-beijing.aliyuncs.com/checkpoints/caption_base_best.pt
-  mkdir weight_checkpoints
-  cp caption_base_best.pt weight_checkpoints
-  ```
-
 ### Environment
-- Please use one of the following approach to make environments.
-  #### With Conda
-    ```
-    conda create -n ImageCaptioningEnv python=3.7.4
-    conda activate ImageCaptioningEnv
-  
-    pip install -r requirements.txt
-    ```
-  
+- Please use one of the following command to make environments.
+
   #### With Docker
     ```
     make docker-build
-    
-    make docker-run
     ```
 ### Run Inference
+
 - Please run the following commands for captioning inferencing
   #### Inference images on images under sample_images directory
      ```
